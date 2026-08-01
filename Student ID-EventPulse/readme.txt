@@ -1,13 +1,6 @@
 # 30811111204856-EventPulse
 
 EventPulse is a production-ready, secure, and real-time Event Management Backend API built with Node.js, Express, MongoDB, and Socket.io.
-
----
-
-## 🔗 Repository Link
-
-- **GitHub Repository:** https://github.com/EyadMo-2008/30811111204856-EventPulse
-
 ---
 
 ## 🛠 Tech Stack
@@ -81,3 +74,4 @@ To run the tests:
 
 Bash
 npm test
+ github link respository : https://github.com/EyadMo-2008/30811111204856-EventPulse
