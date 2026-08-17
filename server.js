@@ -8,7 +8,6 @@ const errorMiddleware = require('./middleware/errorMiddleware');
 // Routes Imports
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
-// Trigger rebuild
 
 dotenv.config();
 
@@ -21,7 +20,7 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-// Dummy Swagger Doc (في حال عدم وجود ملف swagger.json منفصل)
+// Swagger Document Configuration
 const swaggerDocument = {
   openapi: '3.0.0',
   info: {
@@ -53,7 +52,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health Check Endpoint (مطلوب طبقاً للـ Checklist)
+// Health Check Endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -72,6 +71,7 @@ app.use(errorMiddleware);
 // Export app for Vercel Serverless Architecture
 module.exports = app;
 
+// Local Development Server Listener
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
