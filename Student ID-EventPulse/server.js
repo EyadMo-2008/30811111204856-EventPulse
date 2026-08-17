@@ -1,49 +1,79 @@
-require('dotenv').config();
 const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const swaggerUi = require('swagger-ui-express');
 const connectDB = require('./config/db');
-const Message = require('./models/Message');
+const errorMiddleware = require('./middleware/errorMiddleware');
+
+// Routes Imports
+const authRoutes = require('./routes/authRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+
+dotenv.config();
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
 
+// Connect to Database
 connectDB();
 
+// Middlewares
+app.use(cors());
 app.use(express.json());
 
+// Dummy Swagger Doc (في حال عدم وجود ملف swagger.json منفصل)
+const swaggerDocument = {
+  openapi: '3.0.0',
+  info: {
+    title: 'EventPulse API',
+    version: '1.0.0',
+    description: 'Real-time Event Management Backend API Documentation'
+  },
+  paths: {
+    '/health': {
+      get: {
+        summary: 'Check API and DB status',
+        responses: {
+          '200': { description: 'API is running successfully' }
+        }
+      }
+    }
+  }
+};
+
+// Swagger Documentation Route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Root Endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Welcome to EventPulse API',
+    docs: '/api-docs'
+  });
+});
+
+// Health Check Endpoint (مطلوب طبقاً للـ Checklist)
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', database: 'Connected' });
-});
-
-io.on('connection', (socket) => {
-  socket.on('joinRoom', async ({ eventId }) => {
-    socket.join(eventId);
-    const messages = await Message.find({ event: eventId }).sort({ createdAt: 1 });
-    socket.emit('messageHistory', messages);
-  });
-
-  socket.on('broadcastAnnouncement', async ({ eventId, senderId, text, role }) => {
-    if (role !== 'admin') return;
-    
-    const message = await Message.create({
-      event: eventId,
-      sender: senderId,
-      text
-    });
-
-    io.to(eventId).emit('announcement', message);
+  res.status(200).json({
+    status: 'ok',
+    message: 'Server is healthy and running smoothly',
+    timestamp: new Date().toISOString()
   });
 });
 
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
-    status: 'error',
-    message: err.message || 'An error happend in the server'
-  });
-});
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/events', eventRoutes);
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Centralized Error Handling Middleware
+app.use(errorMiddleware);
+
+// Export app for Vercel Serverless Architecture
+module.exports = app;
+
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
