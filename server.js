@@ -8,6 +8,7 @@ const errorMiddleware = require('./middleware/errorMiddleware');
 // Routes Imports
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
+// Trigger rebuild
 
 dotenv.config();
 
